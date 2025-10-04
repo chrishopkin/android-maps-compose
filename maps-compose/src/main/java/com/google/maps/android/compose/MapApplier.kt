@@ -40,6 +40,7 @@ internal class MapApplier(
     val map: GoogleMap,
     internal val mapView: MapView,
     val mapClickListeners: MapClickListeners,
+    private val markerInfoWindowAdapterFactory: ((MapView) -> GoogleMap.InfoWindowAdapter)?
 ) : AbstractApplier<MapNode>(MapNodeRoot) {
 
     private val decorations = mutableListOf<MapNode>()
@@ -210,7 +211,7 @@ internal class MapApplier(
             }
         })
         map.setInfoWindowAdapter(
-            ComposeInfoWindowAdapter(
+            markerInfoWindowAdapterFactory?.invoke(mapView) ?: ComposeInfoWindowAdapter(
                 mapView,
                 markerNodeFinder = { marker ->
                     decorations.firstOrNull { it is MarkerNode && it.marker == marker }

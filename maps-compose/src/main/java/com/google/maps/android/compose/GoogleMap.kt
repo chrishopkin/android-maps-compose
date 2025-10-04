@@ -42,6 +42,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.LocationSource
 import com.google.android.gms.maps.MapView
@@ -102,6 +103,7 @@ public fun GoogleMap(
     contentPadding: PaddingValues = DefaultMapContentPadding,
     mapColorScheme: ComposeMapColorScheme? = null,
     mapViewFactory: (Context, GoogleMapOptions) -> MapView = ::MapView,
+    markerInfoWindowAdapterFactory: ((MapView) -> GoogleMap.InfoWindowAdapter)? = null,
     content: @Composable @GoogleMapComposable () -> Unit = {},
 ) {
     // When in preview, early return a Box with the received modifier preserving layout
@@ -210,6 +212,7 @@ public fun GoogleMap(
                         parentComposition,
                         mapView,
                         mapClickListeners,
+                        markerInfoWindowAdapterFactory,
                         currentContent,
                     )
                 }
@@ -225,6 +228,7 @@ private fun CoroutineScope.launchSubcomposition(
     parentComposition: CompositionContext,
     mapView: MapView,
     mapClickListeners: MapClickListeners,
+    markerInfoWindowAdapterFactory: ((MapView) -> GoogleMap.InfoWindowAdapter)?,
     content: @Composable @GoogleMapComposable () -> Unit,
 ): Job {
     // Use [CoroutineStart.UNDISPATCHED] to kick off GoogleMap loading immediately
@@ -234,7 +238,7 @@ private fun CoroutineScope.launchSubcomposition(
     ) {
         val map = mapView.awaitMap()
         val composition = Composition(
-            applier = MapApplier(map, mapView, mapClickListeners),
+            applier = MapApplier(map, mapView, mapClickListeners, markerInfoWindowAdapterFactory),
             parent = parentComposition
         )
 
