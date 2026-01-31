@@ -95,29 +95,42 @@ dependencies {
     androidTestImplementation(libs.androidx.test.junit.ktx)
 }
 
-// Artifact ID logic
-val attributionId = "gmp_git_androidmapscompose_v$version"
+abstract class GenerateArtifactIdFileTask : DefaultTask() {
 
-val generateArtifactIdFile = tasks.register("generateArtifactIdFile") {
-    val outputDir = layout.buildDirectory.dir("generated/source/artifactId")
-    val packageName = "com.google.maps.android.compose.utils.meta"
-    val packagePath = packageName.replace('.', '/')
-    val outputFile = outputDir.get().file("$packagePath/ArtifactId.kt").asFile
+    @get:Input
+    abstract val attributionId: Property<String>
 
-    outputs.file(outputFile)
+    @get:OutputFile
+    abstract val outputFile: RegularFileProperty
 
-    doLast {
-        outputFile.parentFile.mkdirs()
-        outputFile.writeText(
+    @TaskAction
+    fun generate() {
+        val file = outputFile.get().asFile
+        file.parentFile.mkdirs()
+        file.writeText(
             """
-            package $packageName
+            package com.google.maps.android.compose.utils.meta
 
             public object AttributionId {
-                public const val VALUE: String = "$attributionId"
+                public const val VALUE: String = "${attributionId.get()}"
             }
             """.trimIndent()
         )
     }
+}
+
+val generateArtifactIdFile = tasks.register<GenerateArtifactIdFileTask>("generateArtifactIdFile") {
+    val outputDir = layout.buildDirectory.dir("generated/source/artifactId")
+    val packageName = "com.google.maps.android.compose.utils.meta"
+    val packagePath = packageName.replace('.', '/')
+
+    attributionId.set("gmp_git_androidmapscompose_v$version")
+
+    outputFile.set(
+        layout.buildDirectory.file(
+            outputDir.get().file("$packagePath/ArtifactId.kt").asFile.path
+        )
+    )
 }
 
 tasks.named("preBuild") {
