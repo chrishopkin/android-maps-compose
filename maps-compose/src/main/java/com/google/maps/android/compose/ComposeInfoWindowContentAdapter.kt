@@ -21,7 +21,7 @@ public class ComposeInfoWindowContentAdapter(
         val view = ComposeView(mapView.context).apply {
             setContent { markerInfoContent(marker) }
         }
-        mapView.renderComposeViewOnce(view, parentContext = compositionContext)
+        mapView.renderComposeInfoWindowView(view, parentContext = compositionContext)
         return view
     }
 

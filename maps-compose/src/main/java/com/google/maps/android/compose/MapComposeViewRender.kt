@@ -27,6 +27,7 @@ import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCompositionContext
 import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.google.android.gms.maps.MapView
 import java.io.Closeable
 
@@ -44,6 +45,24 @@ internal fun MapView.renderComposeViewOnce(
 ) {
     startRenderingComposeView(view, parentContext).use {
         onAddedToWindow?.invoke(view)
+    }
+}
+
+/**
+ * Prepares [view] for Google Maps info-window rendering.
+ *
+ * The Maps SDK rasterizes the [View] returned by [GoogleMap.InfoWindowAdapter] after the adapter
+ * method returns. Return an unparented view so Maps can place it in its own container, but keep its
+ * composition alive after the temporary detach so the rasterized contents are still available.
+ */
+internal fun MapView.renderComposeInfoWindowView(
+    view: AbstractComposeView,
+    parentContext: CompositionContext,
+) {
+    view.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+    renderComposeViewOnce(view, parentContext = parentContext)
+    post {
+        view.disposeComposition()
     }
 }
 
